@@ -5,7 +5,7 @@ import os
 # Database URL - can be overridden with environment variable
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql+asyncpg://postgres:password@localhost:5432/edu_app"
+    "postgresql+psycopg://postgres:postgres@localhost:5432/eduapp"
 )
 
 # Create async engine with pgvector support
