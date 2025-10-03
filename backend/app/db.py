@@ -1,21 +1,21 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import declarative_base
 import os
 
-# Database URL - can be overridden with environment variable
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql+psycopg://postgres:postgres@localhost:5432/eduapp"
-)
+# Import DATABASE_URL from environment variable
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/eduapp")
 
-# Create async engine with pgvector support
+# Create async engine with echo=True
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,  # Set to False in production
+    echo=True,
     future=True,
 )
 
-# Create async session factory
+# Create Base declarative base
+Base = declarative_base()
+
+# Create sessionmaker that yields AsyncSession
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
@@ -23,24 +23,10 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-class Base(DeclarativeBase):
-    """Base class for all database models"""
-    pass
-
-
 async def get_db():
-    """Dependency to get database session"""
+    """FastAPI dependency to get database session"""
     async with AsyncSessionLocal() as session:
         try:
             yield session
         finally:
             await session.close()
-
-
-async def init_db():
-    """Initialize database tables"""
-    async with engine.begin() as conn:
-        # Enable pgvector extension
-        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        # Create all tables
-        await conn.run_sync(Base.metadata.create_all)
